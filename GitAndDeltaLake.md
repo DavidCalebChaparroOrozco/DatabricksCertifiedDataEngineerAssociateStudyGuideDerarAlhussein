@@ -114,4 +114,3 @@ The process of combining changes from one branch to another, e.g., merging a fea
 3. Click "Create Git folder".
 
 --- 
-
