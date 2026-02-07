@@ -114,3 +114,98 @@ The process of combining changes from one branch to another, e.g., merging a fea
 3. Click "Create Git folder".
 
 --- 
+
+## Delta Lake: Databricks' Reliability Layer
+
+### What is Delta Lake?
+
+A file-based storage layer (S3, ADLS, GCS) that adds reliability and data control.
+
+**Turns a 'raw' data lake into a reliable one**
+
+✖️ Without Delta Lake
+- Corrupted or inconsistent data
+- Concurrent read failures
+- No change history
+
+✅With Delta Lake
+- ACID transactional tables
+- Consistent reads every time
+- Time travel and auditing (past time)
+
+**Key Features**
+- ACID transactions
+- Transaction log
+- Time travel
+- Scalability
+
+## Reliability in Delta Lake: ACID Transactions
+
+**Delta Lake allows multiple processes to work on the same data simultaneously without risk of corruption.**
+_(With 'pure' Parquet, it's very easy to corrupt the data.)_
+
+✖️ Without Delta Lake (Parquet)
+**One job writes while another reads:**
+- Incomplete data reading
+- Unexpected failures in read jobs
+- Incorrect results without warning
+
+✅ With Delta Lake
+**Control layer over Parquet:**
+- On top: A transaction log (Delta Log)
+- Result: Data consistency and versioning
+- It behaves like a real database
+
+## ACID Transactions: The Reliability Guarantee
+
+- A: **Atomization**, the operation either completes or doesn't occur.
+
+- C: **Consistency**, the data always remains in a valid state.
+
+- I: **Isolation**, reads don't see incomplete writes.
+- D: **Durability**, a persistent change isn't lost.
+
+**You can read data with the assurance that it's correct, even if someone is writing at the same time.**
+
+### An example: Banking Software
+
+In a banking system, when I make a transfer, the money should be deducted from my account and credited to the recipient's account as a single transaction.
+
+If any of the steps fail during the process, the entire transaction is canceled, and the money remains in its original state; that is, the transfer is either completed or not completed at all.
+
+---
+
+## Transaction Log: The central mechanism of Delta Lake
+
+**Detailed and organized record of every operation on a Delta table**
+
+_The log is the single source of truth._
+
+**Physical Location**
+Folder: _delta_log/
+- Ordered JSON files (000.json), (001.json)
+- Each JSON file is a commit and a new version of the table
+
+### How does it work?
+
+1. An operation modifies data
+2. New Parquet files are written
+3. A JSON file is added to the log pointing to the new files
+4. The engine queries the log to determine which files to read.
+
+>🌟Key benefits: ACID transactions, time travel, and complete auditing
+
+**⚠️The log is append-only: IT IS NEVER OVERWRITTEN, ONLY NEW VERSIONS ARE ADDED**
+
+## Scenario 1: Writing & Reading
+![Scenario 1](Scenario1Writing&Reading.png)
+
+## Scenario 2: Updating
+![alt text](Scenario2Update.png)
+
+## Scenario 3: Concurrent Writes & Reads
+![alt text](Scenario3Writes&Reading.png)
+
+## Scenario 4: Failed Writes
+![alt text](Scenario4FailedWrites.png)
+
