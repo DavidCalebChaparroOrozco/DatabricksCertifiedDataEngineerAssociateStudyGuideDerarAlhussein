@@ -208,3 +208,4 @@ Folder: _delta_log/
 
 ## Scenario 4: Failed Writes
 ![alt text](Scenario4FailedWrites.png)
+
