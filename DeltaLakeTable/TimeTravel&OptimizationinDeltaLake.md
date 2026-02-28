@@ -223,4 +223,3 @@ Practical rather than technical limit
 ### Bad example: ✖️
 `ZORDER BY (country, gender)`
 > Low cardinality, little benefit (if they have low cardinality)
-
