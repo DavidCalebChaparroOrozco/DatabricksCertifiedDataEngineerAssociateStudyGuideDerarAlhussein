@@ -110,3 +110,79 @@ sales.transactions
 > - transactions `table`
 > 
 > There is nothing above database
+
+---
+
+## New Structure
+
+```
+└── Account Level
+    └── Metastore (One per region)
+        └── Catalog ← New!
+            └── Schema
+                └── Table
+```
+
+- New level: Catalog required (*)
+- Schema still exists
+- 3 visible levels
+
+### `Namespace now`
+``` SQL
+SELECT *
+FROM company_analytics.sales.transactions;
+```
+
+### Namespace: `catalog.schema.table`
+```SQL
+company_analytics.sales.transactions
+```
+> - company_analytics `catalog`
+> - sales `schema`
+> - transactions `table`
+
+### Create Structure
+
+```SQL
+CREATE CATALOG company_analytics;
+
+CREATE SCHEMA company_analytics.sales;
+
+CREATE TABLE company_analytics.sales.transactions (...);
+```
+
+---
+
+![alt text](HiveMetastoreVSUnityCatalog1.png)
+
+![alt text](HiveMetastoreVSUnityCatalog2.png)
+
+---
+
+## Before vs Now Summary
+
+| **Aspect**              | **Before (Hive)**        | **Now (Unity Catalog)**            |
+|---------------------|----------------------|--------------------------------|
+| Metastore           | Per workspace        | Account level                  |
+| Visible Catalog     | Did not exist        | Required                       |
+| Database / Schema   | Equivalent           | Schema still exists            |
+| Namespace           | database.table       | catalog.schema.table           |
+| Logical Levels      | 2 levels             | 3 levels                       |
+| Governance          | No centralized governance | Centralized and shared   |
+| Workspace           | Isolated metastores  | Share a metastore              |
+
+---
+
+## What is DBFS?
+An abstraction layer over cloud storage
+
+`dbfs:/user/hive/warehouse/` → Actually, it's → `s3://databricks-workspace-bucket/...`
+
+### Physical Storage
+- Amazon S3
+- Azure ADSL
+- Google GCS
+> DBFS provides user-friendly paths, but the data always ends up in the cloud.
+
+---
+
