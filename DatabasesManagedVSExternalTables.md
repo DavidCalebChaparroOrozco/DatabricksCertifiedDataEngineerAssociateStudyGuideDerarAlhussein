@@ -186,4 +186,149 @@ An abstraction layer over cloud storage
 
 ---
 
-## 
+## Example
+
+### Managed Table in Hive
+
+`CREATE TABLE sales.table_1 (...);`
+
+It is automatically saved in:
+`dbfs:/user/hive/warehouse/sales.db/table_1`
+
+Which is actually:
+`s3://workspace-internal-bucket/user/hive/warehouse/`
+
+### Limitations of the old model
+- ⚠️ Bucket owned by the workspace
+- ⚠️ Not designed to govern enterprise
+- ⚠️ Coupled to the workspace environment
+> - Internal bucket: S3/ ADLS / GCS
+
+### Managed Table in Unity Catalog
+
+`CREATE TABLE analytics.ventas.table_1 (...);`
+
+It is saved in the configured managed location:
+`s3://company-datastore/uc-managed/analytics/ventas/table_1/`
+
+> Enterprise bucket controlled by the metastore - not the workspace
+
+### Advantages of the new model
+- Separates compute from storage
+- Centralized data governance
+- Clear control of physical location
+- Enterprise bucket (not workspace bucket)
+
+---
+
+## Legacy Model: Hive Metastore
+The user manually defined the location in DBFS:
+
+```
+CREATE SCHEMA db_y
+LOCATION 'dbfs:/custom/path/db_y.db';
+```
+
+- Schema resided within the workspace
+- Metadata in the local hive_metastore
+- Physical data stored in DBFS
+> Simple, "filesystem-based" model
+
+### Filesystem Structure
+DBFS created a `.db` folder with subdirectories for each table:
+```
+dbfs:/custom/path/
+└── db_y.db/
+    ├── table_1/
+    │   ├── part-00000.parquet
+    │   └── part-00001.parquet
+    └── table_2/
+        └── part-00000.parquet
+```
+> ⚠️ The user controlled the route - no centralized governance
+
+## Modern Model: Unity Catalog
+Simple Code - No Need to Specify LOCATION:
+
+```SQL
+CREATE CATALOG analytics;
+
+CREATE SCHEMA  analytics.db_y;
+```
+
+The data is stored in the Managed Location:
+`s3://datastore/uc-managed/analytics/db_y/`
+
+> The metastore administrator defines the path, not the user.
+
+### Key Advantages
+- **No DBFS:** Data goes directly to enterprise cloud storage.
+- **Governance with Credentials:** Storage credentials control access to the bucket.
+- **External Locations:** Cloud paths are registered and auditable in UC.
+- **Managed Locations by Admin:** Configured at the metastore or catalog level.
+
+> From "the user chooses the path" → "the administrator governs the storage"
+
+---
+
+## Managed Table in Unity Catalog
+Unity Catalog has full control over the table:
+- UC controls the table's **metadata**
+- UC controls the **physical location** of the data
+- `DROP TABLE` deletes metadata **AND** data
+
+### Physical Location (example)
+```
+s3://datalakae/uc-managed/analytics/ventas/clientes/
+```
+> Defined by the metastore configuration, not by the user
+
+## How to create it
+SQL code, without defining LOCATION:
+```SQL
+```CREATE TABLE analytics.ventas.clientes(
+    id BIGINT,
+    name STRING
+) USING DELTA;
+```
+
+---
+
+## External Table in Unity Catalog
+
+Concept:
+- UC stores metadata
+- Data resides in an external location
+- `DROP TABLE` does not delete files
+
+### Important Change vs. Hive
+- **✖️ Hive (free):**
+    ```SQL
+    CREATE EXTERNAL TABLE
+    table_x
+    LOCATION 'dbfs:/my_path/';
+    ```
+    > Any path, without restriction
+
+- **✅ UC (Governed):**
+    Only registered and authorized routes
+    > Requires External Location
+
+
+### How to create it (2 Steps)
+
+**1. Admin creates External Location:**
+```SQL
+CREATE EXTERNAL LOCATION sales _ext
+URL 'S3://data lake/external/sales/'
+WITH CREDENTIAL STORAGE
+my_credential;
+```
+
+**2. User creates External Table:**
+```SQL
+CREATE TABLE analytics.ventas.tabla ext
+LOCATION
+'s3://data lake/external/ventas/'
+```
+> Only routes registered and authorized by the administrator
