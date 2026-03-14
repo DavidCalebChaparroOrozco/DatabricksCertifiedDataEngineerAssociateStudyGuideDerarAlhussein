@@ -332,4 +332,3 @@ LOCATION
 's3://data lake/external/ventas/'
 ```
 > Only routes registered and authorized by the administrator
-
