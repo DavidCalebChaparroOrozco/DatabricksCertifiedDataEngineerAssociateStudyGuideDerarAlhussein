@@ -332,3 +332,4 @@ sales_clone/
 - Extremely fast
 - Takes up almost no additional storage
 - ✖️ If you delete files from the source, the clone can break or lose access to the data
+
