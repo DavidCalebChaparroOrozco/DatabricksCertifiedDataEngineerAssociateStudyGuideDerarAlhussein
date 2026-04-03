@@ -1,1 +1,1 @@
-# Cloning tables in Delta Lake, Time Travel, Temporary and Global Views.
+# Cloning tables in Delta Lake, Time Travel, Temporary and Global Views
