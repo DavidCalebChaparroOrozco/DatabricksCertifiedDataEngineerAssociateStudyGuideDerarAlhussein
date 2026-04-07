@@ -133,3 +133,30 @@ VERSION AS OF 42;
 | Delta History     | ❌ Not preserved (new table starts fresh)         | ✅ Preserved (inherits source table history)                |
 | Speed             | 🐢 Slower (depends on query + data processing)    | ⚡ Faster (especially shallow clone)                         |
 | Use case          | Data transformation, aggregations, new datasets   | Backups, testing, environment replication                   |
+
+---
+
+## What is a View?
+
+**A saved SQL query that behaves like a table**
+
+- It doesn't physically store data.
+- It only stores the logic of the `SELECT` statement.
+- It is executed at the time of the query.
+- It allows for data abstraction and security.
+
+### Example: Creating a View
+
+```SQL
+CREATE VIEW active_users AS
+SELECT *
+FROM users
+WHERE active = true;
+
+-- View the created view
+SELECT * 
+FROM active_users;
+```
+
+![alt text](ViewExample.png)
+
