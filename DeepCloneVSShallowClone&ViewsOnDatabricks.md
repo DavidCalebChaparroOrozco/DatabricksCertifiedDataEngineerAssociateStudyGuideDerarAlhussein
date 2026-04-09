@@ -160,3 +160,123 @@ FROM active_users;
 
 ![alt text](ViewExample.png)
 
+---
+
+## What are Views used for?
+
+### 1. Simplifying Queries
+> Encapsulates complex logic in a reusable view
+```SQL
+CREATE VIEW sales_summary AS
+SELECT region, SUM(amount) AS TOTAL
+FROM sales
+GROUP BY region;
+```
+
+### 2. Data Abstraction
+> Combines multiple tables into a single view
+```SQL
+CREATE VIEW customer_orders AS
+SELECT c.name, o.order_id, o.amount
+FROM customers c
+JOIN orders o
+ON c.id = o.customer_id;
+```
+
+### 3. Security with Unity Catalog
+> Hides PII columns, exposing only permitted data
+```SQL
+CREATE VIEW safe_users AS
+SELECT user_id, name
+FROM users;
+-- Hide email & phone
+```
+
+---
+
+## Create and Replace a View
+
+### Create View
+Basic syntax for creating a view in a specific schema
+```SQL
+CREATE VIEW analytics.high_value_orders AS
+SELECT order_id, customer_id, amount
+FROM orders
+WHERE amount > 1000;
+```
+
+
+### Create or Replace View
+Updates the logic of an existing view without manually recreating it
+```SQL
+CREATE OR REPLACE VIEW analytics.high_value_orders AS
+SELECT order_id, customer_id, amount, status
+FROM orders
+WHERE amount > 500;
+```
+
+> Common in data pipelines to update logic without deleting the view
+
+---
+
+## Temporary Views
+
+- **Duration:** Current session only
+- **Visibility:** Not shown in the catalog
+- **Scope:** Current user/session
+- **Ideal Use:** Intermediate transformations
+
+```SQL
+-- Create a Temporary View
+CREATE TEMP VIEW temp_high_sales AS
+SELECT *
+FROM sales
+WHERE amount > 5000;
+
+-- Use in the same session
+SELECT region, COUNT(*)
+FROM temp_high_sales
+GROUP BY region;
+```
+
+> ⚠️ When you close the session or notebook, the Temporary View disappears automatically
+
+---
+
+## Global Temporary Views
+
+- **Scope:** All cluster sessions
+- **Duration:** Until the cluster stops
+- **Special Schema:** `global_temp`
+
+Always access with the prefix:
+`global_temp.view_name`
+
+### Create Global Temporary View
+```SQL
+CREATE GLOBAL TEMP VIEW global_sales AS
+SELECT *
+FROM sales
+WHERE year = 2026;
+```
+
+### Query from any session
+```SQL
+SELECT *
+FROM global_temp.global_sales
+WHERE region = "LATAM"
+```
+
+---
+
+## Temporary vs Global Temporary View
+
+| Characteristics        | Temporary View                                      | Global Temporary View                                      |
+|-----------------------|-----------------------------------------------------|-------------------------------------------------------------|
+| Syntax                | CREATE OR REPLACE TEMP VIEW view_name AS SELECT...  | CREATE OR REPLACE GLOBAL TEMP VIEW view_name AS SELECT...  |
+| Scope                 | Session-scoped                                      | Application-scoped (shared across sessions)                |
+| Duration              | Exists only during the current session              | Exists until the Spark application ends                    |
+| Schema                | Not tied to any database/schema                     | Stored in a system database (global_temp)                  |
+| Access                | Accessible only within the same session             | Accessible from any session using global_temp.view_name    |
+| Catalog Visibility    | Not visible in catalog listings                     | Visible under the global_temp database                     |
+| Common Use            | Intermediate transformations within a session       | Sharing temporary data between different notebooks/sessions|
