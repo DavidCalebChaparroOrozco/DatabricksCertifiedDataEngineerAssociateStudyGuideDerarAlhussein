@@ -112,3 +112,22 @@ Verifies the quality, format, and completeness of received data.
 SELECT COUNT(*)
 ```
 FOR AUDITING
+
+---
+
+## Operations: What can you do?
+
+### ✅ YES, you can
+- `SELECT` Read and query files
+- `JOIN` Combine files with tables
+- `WHERE / FILTER` Filter results
+- `CREATE TABLE AS` Save results as a Delta table
+
+### ✖️ NO, you can't
+- `INSERT INTO` You cannot insert rows into files
+- `UPDATE` Files are immutable from SQL
+- `DELETE` Does not apply to raw files
+- `MERGE` Only to Delta tables
+
+> To modify data: convert the file to a Delta table first
+
