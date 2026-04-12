@@ -131,3 +131,109 @@ FOR AUDITING
 
 > To modify data: convert the file to a Delta table first
 
+---
+
+## Path Structure
+
+`/Volumes/<catalog>/<schema>/<volume>/<optional_path>`
+
+- **Fixed Prefix:** `/Volumes/`
+- **Catalog/Schema/Volume:** `<catalog>/<schema>/<volume>`
+- **Folder or File:** `<optional_path>`
+
+### Specific File
+`/Volumes/my_catalog/bronze/raw/data.json`
+
+### Entire Folder
+`/Volumes/my_catalog/bronze/raw/`
+
+### With Wildcard
+`/Volumes/my_catalog/bronze/raw/*.json`
+
+---
+
+## Reading Files by Format
+
+### JSON
+```SQL
+SELECT * FROM json.`/Volumes/catalog/schema/volume/file.json`
+```
+
+### CSV
+```SQL
+SELECT * FROM csv.`/Volumes/catalog/schema/volume/file.csv
+```
+
+### PARQUET
+```SQL
+SELECT * FROM parquet.`/Volumes/catalog/schema/volume/file.parquet
+```
+
+> The format is specified **BEFORE** the backticks: 
+> ```SQL
+> format.`/path/to/file`
+> ```
+
+---
+
+## Wildcards: Read Multiple Files
+
+### Entire Folder
+Reads all JSON files within a folder
+```SQL
+SELECT *
+FROM json.`/Volumes/catalog/schema/volume/folder/`
+```
+
+### All .json files
+Wildcard * filters by extension in the same folder
+```SQL
+SELECT *
+FROM json.`/Volumes/catalog/schema/volume/*.json`
+```
+
+### Filter by Name
+Combines prefix + wildcard to read files from a specific period
+```SQL
+FROM json.`/Volumes/catalog/schema/volume/data_2026*.json`
+```
+
+## Implicit Partitioning - Apache Hive
+
+### Partition Pruning
+When organizing files into folders using `key = value`, Databricks automatically omits partitions that don't match the `WHERE` filter.
+
+```SQL
+SELECT *
+FROM json.`/Volumes/catalog/schema/volume/`
+WHERE year = 2024 AND month = 06
+```
+
+> Only reads the folder year = 2024/ month = 06 / - ignores the rest.
+
+```
+volume/
+├── year=2024/ 
+│   ├── month=06/ ← ✅ IT READS 
+│   └── month=07/ ← is ignored
+└── year=2023 ← is ignored
+```
+
+---
+
+# Best Practices
+
+- **Avoid giant folders without filters (performance)**
+Without WHERE clauses or wildcards, Databricks will read ALL files. Costly and slow.
+
+- **Use wildcards intentionally (organization)**
+Design filename patterns from the start to facilitate filtering.
+
+- **Organize by date using a "Hive" (efficiency)**
+Use `year=/month=/day=` to enable automatic partition pruning.
+
+- **Convert to Delta when possible (architecture)**
+Files are temporary. The final layer should be a Delta table.
+
+---
+
