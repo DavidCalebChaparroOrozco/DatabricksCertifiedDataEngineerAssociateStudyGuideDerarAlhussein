@@ -54,3 +54,65 @@ Every operation is logged in the Delta Lake log.
 
 ---
 
+## CTAS Limitation (Doesn't allow configuring source file options)
+
+> CTAS doesn't support `OPTIONS`; you can't specify a separator, header, or schema when reading a CSV directly.
+
+- ✖️ THIS DOESN'T WORK
+```SQL
+-- CTA does not accept OPTIONS
+CREATE TABLE sale_delta
+AS SELECT *
+FROM csv.`/data/sales.csv`
+-- There is no way to specify:
+-- header = true
+-- sep = ','
+-- inferSchema = true
+```
+
+**Why does it fail?**
+- CTAS executes `SELECT` on an already structured result.
+- A raw CSV needs parsing instructions.
+- Without a header or separator, the columns are incorrect.
+- The inferred schema may be incorrect.
+
+> → We need `USING + OPTIONS`
+
+---
+
+## The alternative: `USING + OPTIONS`
+Defining external data access
+
+- **USING:** Specifies the format, tells Spark how to read the source: CSV, JSON, JDBC, Parquet, ORC...
+
+- **OPTIONS:** Configures the reading, passes parameters to the reader: header, sep, inferChema, url, dbtable, driver...
+
+- **LOCATION:** Points to the source, defines the path to the file or endpoint of the external database
+
+---
+
+## Create Table from CSV
+
+### `CREATE TABLE USING CSV OPTIONS`
+
+```SQL
+CREATE TABLE sales_csv
+USING CSV
+OPTIONS (
+    path    '/mnt/data/sales.csv',
+    header  'true',
+    sep     ',',
+    inferSchema 'true'
+);
+
+-- Verify the created table
+SELECT *
+FROM sales_csv
+LIMIT 10;
+```
+
+- **Path:** Path to the CSV file in DBFS, S3, ADLS, or GCS.
+
+- **header + sep:** header = true → first row as column names
+sep = ',' → delimiter
+- **inferSchema:** Spark reads the file and automatically infers the data types of each column.
