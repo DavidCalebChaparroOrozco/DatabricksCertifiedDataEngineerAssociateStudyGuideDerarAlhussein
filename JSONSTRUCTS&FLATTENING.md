@@ -162,3 +162,127 @@ Applies the schema to the entire column and converts each row of JSON text into 
 - Output: Typed STRUCT column
 > Applies to the entire table
 
+---
+
+## StructType vs JSON String: Which to Choose?
+
+### JSON STRING
+- Parsing on every operation (slow)
+- No Catalyst optimization
+- Runtime type errors
+- Spark doesn't know the internal structure
+- Useful for quickly extracting 1-2 fields
+> Convenient but costly at scale
+
+### Native STRUCT
+- Direct binary access (very fast)
+- Full Catalyst optimization
+- Defined types, no surprise errors
+- Column pruning: reads only what's needed
+- Works with `WHERE`, `GROUP BY`, `JOIN`
+> Recommended for production
+
+---
+
+## Dot (`.`) Syntax for Navigating StructTypes
+
+### user: STRUCT column
+- `.` → name → Caleb
+- `.` → address `.` → city → Medellin
+- `.` → purchase → [list]
+> The dot (.) directly accesses binary memory
+
+### Where can you use it?
+- `SELECT`: user.name → gets the name
+- `WHERE`: user.address.country → filters by country
+- `GROUP BY`: user.address.city → filters by city
+- `ORDER BY`: user.age → orders by age
+> Works anywhere in the query.
+
+---
+
+## What is Flattening? Flattening Nested Structures
+
+### BEFORE: Nested Column
+**user(STRUCT)**
+- id
+- name
+- location (STRUCT)
+- purchases (ARRAY)
+
+## Flattening
+
+### AFTER: Top-Level Columns
+- id
+- name
+- city_location
+- country_location
+- purchases
+
+### Why Flatten Structures?
+
+- **Exporting to CSV**: CSV files do not support nested columns
+- **Relational Databases**: Traditional SQL expects simple, flat columns
+- **BI Tools**: Power BI and Tableau require top-level columns
+- **Simpler Queries**: Less nesting = more readable and maintainable queries
+
+---
+
+## Method 1: Wildcard - Method 2: Field by Field
+
+### 1. Wildcard `Quick Scan (.*)`
+Automatically expands all fields of the STRUCT to first-level columns
+
+user STRUCT with 4 fields → user.* → 4 columns automatically
+
+- ✅ Quick to type
+- ✅ Ideal for scanning
+- ✖️ Only flattens one level
+- ✖️ No name control
+- ✖️ Not recommended for production
+
+### 2. Field by Field `Production (col AS alias)`
+Selects and renames each field of the STRUCT manually with full control
+user.name → AS client_name
+user.address.city → AS city
+user.age → AS age
+- ✅ Full name control
+- ✅ Works in any Level
+- ✅ Recommended for production
+- ✖️ More complex to write
+
+![alt text](WildCardVSFieldbyField.png)
+
+---
+
+## Method 3: `explode()` for Arrays
+
+### 3. `explode()` Converts lists into rows
+Each element of an array becomes a separate row in the DataFrame.
+
+- **Row Multiplication:** 1 row with N elements → N individual rows
+
+- Analyze each purchase individually
+- Count occurrences per element
+- Join arrays with other tables
+> The number of rows increases; consider the impact on volume
+
+## BEFORE `explode()` (1 row)
+
+| id  | name      | purchases (ARRAY)              |
+| --- | --------- | ------------------------------ |
+| 001 | John Wick | [Laptop, Headphones, Keyboard] |
+
+---
+
+## AFTER `explode()` (3 row)
+
+| id  | name      | purchases  |
+| --- | --------- | ---------- |
+| 001 | John Wick | Laptop     |
+| 001 | John Wick | Headphones |
+| 001 | John Wick | Keyboard   |
+
+---
+
+
