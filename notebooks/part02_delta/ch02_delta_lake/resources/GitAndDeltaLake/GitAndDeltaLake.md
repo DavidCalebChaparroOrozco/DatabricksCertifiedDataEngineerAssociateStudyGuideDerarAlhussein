@@ -198,15 +198,15 @@ Folder: _delta_log/
 **⚠️The log is append-only: IT IS NEVER OVERWRITTEN, ONLY NEW VERSIONS ARE ADDED**
 
 ## Scenario 1: Writing & Reading
-![Scenario 1](Scenario1Writing&Reading.png)
+![Scenario 1](/notebooks/part02_delta/ch02_delta_lake/images/Scenario1Writing&Reading.png)
 
 ## Scenario 2: Updating
-![alt text](Scenario2Update.png)
+![alt text](/notebooks/part02_delta/ch02_delta_lake/images/Scenario2Update.png)
 
 ## Scenario 3: Concurrent Writes & Reads
-![alt text](Scenario3Writes&Reading.png)
+![alt text](/notebooks/part02_delta/ch02_delta_lake/images/Scenario3Writes&Reading.png)
 
 ## Scenario 4: Failed Writes
-![alt text](Scenario4FailedWrites.png)
+![alt text](/notebooks/part02_delta/ch02_delta_lake/images/Scenario4FailedWrites.png)
 
 

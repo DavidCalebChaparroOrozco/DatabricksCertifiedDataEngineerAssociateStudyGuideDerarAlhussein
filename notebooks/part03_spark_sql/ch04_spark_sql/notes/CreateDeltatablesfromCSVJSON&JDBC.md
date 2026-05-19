@@ -208,7 +208,7 @@ Why **Delta** is the source of truth
 ## The Cache Problem
 Outdated External Data
 
-![alt text](TheCacheProblem.png)
+![alt text](/notebooks/part03_spark_sql/ch04_spark_sql/images/TheCacheProblem.png)
 
 ### Initial State
 ``` SQL

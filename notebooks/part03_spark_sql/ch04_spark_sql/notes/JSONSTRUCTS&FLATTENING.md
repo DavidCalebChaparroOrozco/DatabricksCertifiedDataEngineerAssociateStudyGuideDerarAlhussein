@@ -251,7 +251,7 @@ user.age → AS age
 - ✅ Recommended for production
 - ✖️ More complex to write
 
-![alt text](WildCardVSFieldbyField.png)
+![alt text](/notebooks/part03_spark_sql/ch04_spark_sql/images/WildCardVSFieldbyField.png)
 
 ---
 

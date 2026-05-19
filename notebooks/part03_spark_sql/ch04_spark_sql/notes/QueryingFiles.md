@@ -15,7 +15,7 @@ Governed storage space within the Lakehouse
 
 ---
 
-![alt text](HierarchyInTheLakehouse.png)
+![alt text](/notebooks/part03_spark_sql/ch04_spark_sql/images/HierarchyInTheLakehouse.png)
 
 ---
 
@@ -85,7 +85,7 @@ Any binary or text file, not just structured data
 - Supports JOIN, UPDATE, and DELETE operations
 - Layer AFTER ingestion
 
-![alt text](Volumes≠Tables.png)
+![alt text](/notebooks/part03_spark_sql/ch04_spark_sql/images/Volumes≠Tables.png)
 
 > Volumes are the starting point, not the final destination.
 

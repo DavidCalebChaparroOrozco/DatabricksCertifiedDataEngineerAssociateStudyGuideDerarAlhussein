@@ -30,7 +30,7 @@ Do the heavy lifting of processing data in parallel across multiple nodes.
 
 **In Community Edition: A single node acts as both Driver and Worker (15 GB RAM).**
 
-![DataBricksClusterArchitecture](DataBricksClusterArchitecture.png)
+![DataBricksClusterArchitecture](/notebooks/part01_fundamentals/ch01_fundamentals/images/DataBricksClusterArchitecture.png)
 
 ---
 

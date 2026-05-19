@@ -33,7 +33,7 @@ SHALLOW CLONE prod.sales;
 LOCATION "/mnt/dev/sales_clone";
 ```
 
-![alt text](ShallowCloneExample.png)
+![alt text](/notebooks/part02_delta/ch03_delta_tables/images/ShallowCloneExample.png)
 
 ---
 
@@ -55,7 +55,7 @@ DEEP CLONE sales
 LOCATION "/mnt/dev/sales";
 ```
 
-![alt text](DeepCloneExample.png)
+![alt text](/notebooks/part02_delta/ch03_delta_tables/images/DeepCloneExample.png)
 
 ---
 
@@ -158,7 +158,7 @@ SELECT *
 FROM active_users;
 ```
 
-![alt text](ViewExample.png)
+![alt text](/notebooks/part02_delta/ch03_delta_tables/images/ViewExample.png)
 
 ---
 

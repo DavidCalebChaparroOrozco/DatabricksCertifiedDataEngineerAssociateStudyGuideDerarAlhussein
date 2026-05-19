@@ -117,7 +117,7 @@ One row per student, array of unique values
 
 ### Combine **columns** from two tables based on a common condition
 
-![alt text](JoinOperations.png)
+![alt text](/notebooks/part03_spark_sql/ch04_spark_sql/images/JoinOperations.png)
 
 ---
 

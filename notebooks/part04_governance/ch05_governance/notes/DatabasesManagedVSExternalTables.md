@@ -37,7 +37,7 @@ The metastore stores...
 
 ---
 
-![alt text](DeltaLakeVSMetastore.png)
+![alt text](/notebooks/part04_governance/ch05_governance/images/DeltaLakeVSMetastore.png)
 
 ---
 
@@ -153,9 +153,9 @@ CREATE TABLE company_analytics.sales.transactions (...);
 
 ---
 
-![alt text](HiveMetastoreVSUnityCatalog1.png)
+![alt text](/notebooks/part04_governance/ch05_governance/images/HiveMetastoreVSUnityCatalog1.png)
 
-![alt text](HiveMetastoreVSUnityCatalog2.png)
+![alt text](/notebooks/part04_governance/ch05_governance/images/HiveMetastoreVSUnityCatalog2.png)
 
 ---
 
