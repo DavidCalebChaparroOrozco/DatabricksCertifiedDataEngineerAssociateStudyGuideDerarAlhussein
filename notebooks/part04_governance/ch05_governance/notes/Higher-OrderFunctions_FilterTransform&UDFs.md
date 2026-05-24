@@ -20,4 +20,3 @@ A function receives another function as a parameter.
 > filter( array, f)
 > ```
 > Result: [4, 5]
-
