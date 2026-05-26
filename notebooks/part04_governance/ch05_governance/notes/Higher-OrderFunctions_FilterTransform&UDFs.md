@@ -231,3 +231,4 @@ Result:
 | Office Chair  | 120   | Medium   |
 | Gaming Laptop | 1500  | Premium  |
 | Notebook      | 10    | Economic |
+
