@@ -89,3 +89,72 @@ The data is no longer raw and becomes **clean, standardized, and reliable data.*
 
 ---
 
+## Gold (Business-Ready Data)
+The data has already been **transformed and modeled** to answer business questions.
+
+- **Bronze:** What came in?
+
+- **Silver:** What data is reliable?
+
+- **Gold:** What does the business need?
+
+> Here, the data is **aggregated and summarized:** many records are converted into a few valuable metrics.
+
+---
+
+## From Silver to Gold: Aggregating for Business
+
+### What's Built in Gold
+- **KPIs** and Business Metrics
+- **Aggregations and Summaries**
+- Tables for **Dashboards**
+- Data Marts and Dimensional Models
+- Datasets for **Machine Learning**
+
+### Silver → Gold: From Individual Records to Business Metrics
+
+The **Silver** layer contains clean, standardized, row-level data. Each record represents a single business event (for example, a social media publication).
+
+**Silver (Individual Rows)**
+
+| post_id | published_date | platform | account | impressions | engagements | clicks |
+|---------:|----------------|----------|---------|------------:|------------:|-------:|
+| 1001 | 2026-06-01 | LinkedIn | Corporate | 5,420 | 312 | 48 |
+| 1002 | 2026-06-01 | LinkedIn | Careers | 3,180 | 201 | 35 |
+| 1003 | 2026-06-01 | Instagram | Brand | 8,950 | 724 | 91 |
+| 1004 | 2026-06-02 | Instagram | Brand | 7,840 | 655 | 84 |
+| 1005 | 2026-06-02 | X | Corporate | 2,410 | 118 | 19 |
+
+> At the Silver layer, every row represents an individual publication with validated and standardized attributes.
+
+---
+
+**Gold (Aggregated Business Metrics)**
+
+| Date | Platform | Total Posts | Total Impressions | Total Engagements | Avg. Engagement Rate |
+|------|----------|------------:|------------------:|------------------:|---------------------:|
+| 2026-06-01 | LinkedIn | 2 | 8,600 | 513 | 5.97% |
+| 2026-06-01 | Instagram | 1 | 8,950 | 724 | 8.09% |
+| 2026-06-02 | Instagram | 1 | 7,840 | 655 | 8.35% |
+| 2026-06-02 | X | 1 | 2,410 | 118 | 4.90% |
+
+> **In Gold, individual publications are no longer the focus; instead, the metrics consumed by the business are what matter.**
+
+The Gold layer transforms detailed records into business-ready KPIs, dashboards, and reporting datasets that support decision-making.
+
+> In Gold, individual publications are no longer the focus; instead, **the metrics consumed by the business** are what matter.
+
+---
+
+## Each layer answers a question:
+
+### Bronze (Raw Data)
+**What data arrived?** A faithful copy of the source, untransformed. Your true source.
+
+### Silver (Clean & Standardized)
+**What data is accurate and reliable?** Clean, valid, and standardized data, ready for reuse.
+
+### Gold (Business-ready)
+**What information does the business need?** KPIs, aggregations, and models that feed dashboards and machine learning.
+
+> Higher quality and greater business value at every step: Bronze → Silver → Gold
