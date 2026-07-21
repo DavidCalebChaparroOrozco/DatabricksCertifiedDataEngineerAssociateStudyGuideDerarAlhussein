@@ -45,3 +45,26 @@ It's Databricks' service for **querying, analyzing, and visualizing** data using
 - **Shared reports**: Results accessible to other users.
 
 - **SQL warehouses**: Engines optimized for fast SQL execution.
+
+---
+
+## Two Worlds, One Lakehouse (Separation of Responsibilities)
+
+### Notebooks, Jobs, DLT (Data Engineers & Data Scientists)
+- Build data **pipelines**
+- Create **Delta tables** and transform data
+- Manage the Lakehouse (Engineering, Data Science, and AI)
+> Python, SQL, Scala, R
+
+### SQL Databricks (Data Analysts & Business Users)
+- Query data with **SQL**
+- Create **dashboards** and perform analysis
+- Share **reports** with the business
+> **SQL only**, analytics & BI
+
+### The Lakehouse
+The same **Delta Lake** tables, governed by **Unity Catalog** (one place for both worlds)
+
+> Delta Lake, Unity Catalog
+
+> ### **In summary:** Databricks SQL is a **BI and analytics** tool from Databricks (the environment where an analyst writes SQL queries, builds dashboards, and shares reports with the business).
