@@ -174,3 +174,66 @@ cost = 6 * $0.22 = $1.32 + your cloud VM
 ```
 
 > Same DBU consumption, different final cost depending on the tier you choose
+
+---
+
+## Scaling for Concurrency (Scaling Min / Max Clusters)
+**This is not the cluster size:** it's how many identical clusters run in parallel to handle **simultaneous queries** (Not to accelerate a single query).
+
+- **Min (the floor):** Clusters that remain ready at all times.
+
+- **Max (the ceiling):** Clusters that automatically start up if there's a queue.
+
+> Databricks recommends: **"~1 cluster for every 10 concurrent queries."** If a query waits _5 minutes in the queue_, the data warehouse automatically scales up.
+
+> ⚠️ With `Min = 1 / Max = 1`, you never scale horizontally: only that single cluster running... or shutting down.
+
+### Same size, more clusters (Min = 1; Max = 3) Concurrent queries: 30
+![alt text](../images/HorizontalScalingforConcurrentQueries.jpg)
+
+> Scaling horizontally handles **more queries at once**; each individual query continues running at the same speed.
+
+---
+
+## Connection Details (Connecting from outside)
+External Clients:
+- Power BI
+- Tableau
+- Python
+- Java
+- dbt
+
+### 1. Which server do I connect to?
+
+`Server hostname`
+
+### 2. Which SQL Warehouse should I use?
+
+`HTTP Path (ends with the warehouse ID)`
+
+### 3. How do I authenticate?
+
+`Personal Access Token - OAuth`
+
+> ## With these three pieces of information, Databricks knows **exactly which SQL Warehouse to send each query to**.
+
+---
+
+## From Dataset to Visualization (Dashboards)
+
+### Dataset
+The **query or table** that feeds data to the dashboard. You write the SQL here or select the tables.
+
+### Visualization
+The **graphical widgets.** Each one connects to a dataset from a dropdown menu (by default, it uses the first one and displays as a **bar chart**).
+
+> Key to avoiding duplicate work: **the same dataset feeds multiple charts** without rewriting the query.
+
+### Who uses them:
+**Analysts** create them → **Managers** consult them → **Business** decides
+
+> **Pivot tables:** added in the backend (over 64,000 rows without truncation), drill-through, and cross-filtering from 2026
+> **Text widgets:** titles, images, and links (render Markdown)
+> **Combo, Gantt, Waterfall, and Scatter charts** for specific cases
+
+![alt text](../images/FromDatasettoMultipleVisualizations.jpg)
