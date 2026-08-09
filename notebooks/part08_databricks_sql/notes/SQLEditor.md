@@ -67,3 +67,4 @@ If you've used any of these, you'll feel right at home from the start.
 
 ---
 
+## SQL Editor vs Notebook
