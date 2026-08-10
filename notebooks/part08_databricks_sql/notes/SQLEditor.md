@@ -67,4 +67,47 @@ If you've used any of these, you'll feel right at home from the start.
 
 ---
 
-## SQL Editor vs Notebook
+## SQL Editor — Explore, Analyze, Share
+
+Use it when you...
+
+* Want to **quickly explore and analyze data**
+* Only need to write **SQL queries**
+* Want to create **dashboards and visualizations**
+* Need to **share queries and results** with your team
+* Don't need to write application code
+
+> **Ideal for the day-to-day work of a Data Analyst.**
+
+### Notebook — Program, Transform, Automate
+
+Use it when you...
+
+* Need to write code in **Python or Scala**
+* Want to build **data transformation pipelines (ETL/ELT)**
+* Have **Machine Learning** or advanced analytics needs
+* Want to **automate data workflows and processes**
+* Need to combine **SQL with Python or Scala**
+
+> **The territory of Data Engineers and Data Scientists.**
+
+---
+
+## Visual Data Prep
+A **no-code/low-code** tool for **cleaning, transforming, and preparing data** from a graphical interface (without writing SQL or Python)
+
+### Instead of:
+```python
+df.dropDuplicates().fillana(0)...
+```
+
+### You do:
+Click on the column → menu operation
+
+> And if you want, **you can see the generated code** below
+
+Same idea as:
+- Power Query
+- Alteryx
+- Tableau Prep
+- Trifacta → Google
