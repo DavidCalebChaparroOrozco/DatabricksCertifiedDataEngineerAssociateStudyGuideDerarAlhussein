@@ -299,3 +299,4 @@ Depending on the configuration, the notification could be sent via **email, Slac
 > **If you're coming from Airflow:** Think of an alert as a **monitoring sensor**. It doesn't execute business logic—it observes the result of a query and notifies you when a defined condition is met.
 >
 > **Observability without building your own alerting system.**
+
