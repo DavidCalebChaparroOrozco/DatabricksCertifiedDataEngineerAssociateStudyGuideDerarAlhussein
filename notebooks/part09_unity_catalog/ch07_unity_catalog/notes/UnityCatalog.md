@@ -1020,3 +1020,4 @@ Metastore
 ```
 
 > **The third level provides an additional layer of isolation, organization, and governance, allowing the entire company to use the same Metastore without naming conflicts.**
+
