@@ -514,3 +514,319 @@ Worker Machines
 > **Executor** → the process that provides those resources and runs the task
 
 **Important:** A partition is **not** a machine, and a task is **not** a machine. A task runs on an executor, using one of the executor's available CPU cores.
+
+---
+
+## The Complete Execution Chain
+
+The easiest way to understand Spark execution is to follow the work **from the coordinator down to the data**:
+
+```text
+DRIVER
+  ↓
+EXECUTORS
+  ↓
+CORES
+  ↓
+TASKS
+  ↓
+PARTITIONS
+```
+
+### 1. Driver — The Coordinator
+
+The **Driver** coordinates the entire Spark application.
+
+It creates the execution plan, determines the work that needs to be done, and schedules tasks across the available executors.
+
+> **Driver = “I organize the work.”**
+
+### 2. Executors — The Workers
+
+**Executors** are processes running on worker machines.
+
+They provide the **CPU cores and memory** needed to execute Spark tasks.
+
+> **Executor = “I provide the environment where the work runs.”**
+
+### 3. Cores — The Muscle
+
+A **CPU core** executes a Spark task.
+
+An executor can have multiple cores, allowing it to execute multiple tasks **at the same time**.
+
+> **Core = “I execute the task.”**
+
+### 4. Tasks — The Work
+
+A **task** is a unit of work that processes **one partition for a given stage**.
+
+The Driver creates and schedules these tasks based on the execution plan.
+
+> **Task = “Process this partition.”**
+
+### 5. Partitions — The Data
+
+A **partition** is a logical portion of the dataset.
+
+Spark breaks the dataset into partitions so that different tasks can process different portions independently.
+
+> **Partition = “This is the piece of data to process.”**
+
+### Putting It All Together
+
+Suppose Spark has **4 partitions** and an executor with **4 cores**:
+
+```text
+                 DRIVER
+            "Organize the work"
+                   │
+          ┌────────┴────────┐
+          ▼                 ▼
+     EXECUTOR 1        EXECUTOR 2
+      2 cores           2 cores
+       │  │              │  │
+       ▼  ▼              ▼  ▼
+      T1  T2            T3  T4
+       │  │              │  │
+       ▼  ▼              ▼  ▼
+      P1  P2            P3  P4
+```
+
+The four tasks can run **in parallel**, with each task processing one partition.
+
+> **Driver → schedules tasks → executors run them → cores execute them → each task processes a partition.**
+
+The most important relationship to remember is:
+
+**1 Partition → 1 Task → 1 Core at a time**.
+
+---
+
+## Lazy Evaluation
+
+**Lazy evaluation** means that Spark **does not execute transformations immediately**. Instead, it builds a plan of what needs to be done and waits until an **action** requires a result.
+
+Using your example:
+
+```python
+data = spark.read.parquet("s3://sales/")
+
+data2 = data.filter(data.country == "CO")
+
+data3 = data2.select("customer", "total")
+
+data3.show()
+```
+
+### What happens?
+
+When you run:
+
+```python
+data = spark.read.parquet("s3://sales/")
+```
+
+Spark creates a **representation of the data** and knows where it is stored. It does not immediately process the entire dataset.
+
+Then:
+
+```python
+data2 = data.filter(data.country == "CO")
+```
+
+Spark records:
+
+> “When you eventually need the result, filter the data to Colombia.”
+
+Then:
+
+```python
+data3 = data2.select("customer", "total")
+```
+
+Spark records another instruction:
+
+> “After filtering, keep only these two columns.”
+
+**Still, Spark hasn't actually processed the data.**
+
+The execution starts when you call:
+
+```python
+data3.show()
+```
+
+`show()` is an **action**, so Spark now needs to produce a result.
+
+```text
+read parquet
+     ↓
+filter country = "CO"
+     ↓
+select customer, total
+     ↓
+    show()
+     ↓
+EXECUTE
+```
+
+### Why Does Spark Work This Way?
+
+Because Spark can see the **whole chain of operations before executing it**.
+
+This allows Spark to optimize the execution plan—for example, it can avoid reading unnecessary columns or processing unnecessary data whenever possible.
+
+> **Transformations:** Describe what you want to do → **not executed immediately**
+> **Actions:** Ask Spark for a result → **execution starts**
+
+### Simple Mental Model
+
+Think of it like **writing instructions for a delivery driver**:
+
+> “Go to the warehouse → pick only Colombian orders → keep customer and total → show me the result.”
+
+Spark doesn't start driving after every instruction. It **collects the instructions, plans the trip, optimizes it, and then executes the plan when you actually need the result**.
+
+**Lazy evaluation = Spark plans first, executes later.**
+
+---
+
+## Transformations vs. Actions
+
+Spark operations are generally divided into two categories: **transformations** and **actions**.
+
+| Transformations                               | Actions                                               |
+| --------------------------------------------- | ----------------------------------------------------- |
+| Define how the data should be changed         | Trigger the execution of the plan                     |
+| Are **lazy**                                  | Actually **execute** the computation                  |
+| Return a new DataFrame or Dataset             | Return a result or produce an output                  |
+| Examples: `filter()`, `select()`, `groupBy()` | Examples: `count()`, `show()`, `collect()`, `write()` |
+
+### Transformations
+
+A **transformation** describes a change you want to make to the data.
+
+```python
+filtered = data.filter(data.country == "CO")
+selected = filtered.select("customer", "total")
+```
+
+Spark does **not** execute these operations immediately. It adds them to the execution plan.
+
+> **Transformation = “Tell Spark what you want to do.”**
+
+### Actions
+
+An **action** tells Spark:
+
+> **“I need the result now.”**
+
+For example:
+
+```python
+selected.show()
+```
+
+or:
+
+```python
+selected.count()
+```
+
+At this point, Spark executes the necessary transformations to produce the result.
+
+> **Action = “Execute the plan and give me a result.”**
+
+### Important Correction to the Shortcut
+
+A useful rule of thumb is:
+
+> **If an operation returns a DataFrame, it is usually a transformation. If it triggers execution and produces a result or external output, it is an action.**
+
+However, **`groupBy()` is a transformation, even though it does not immediately return a DataFrame-like result by itself**. It creates a grouping operation that is completed when you apply something like `.count()`.
+
+### Mental Model
+
+```text
+Transformations
+filter()
+   ↓
+select()
+   ↓
+groupBy()
+   ↓
+     ────────────────
+          PLAN
+     ────────────────
+             ↓
+          ACTION
+         count()
+             ↓
+         EXECUTE
+             ↓
+          RESULT
+```
+
+**Transformations build the plan. Actions trigger the execution.**
+
+---
+
+## Knowing the Complete Plan = Optimizing
+
+One of Spark's biggest advantages is that **lazy evaluation lets Spark see the entire chain of transformations before executing them**.
+
+For example:
+
+```python
+data = spark.read.parquet("s3://sales/")
+
+result = (
+    data
+    .filter(data.country == "CO")
+    .select("customer", "total", "date")
+)
+
+result.show()
+```
+
+The final result only needs **3 columns**:
+
+* `customer`
+* `total`
+* `date`
+
+Spark can analyze the complete plan and determine that it **doesn't need to read every column from the Parquet files**.
+
+Instead:
+
+```text
+Parquet file
+100 columns
+     ↓
+Spark analyzes the plan
+     ↓
+Read only 3 columns
+     ↓
+Filter the relevant rows
+     ↓
+Process less data
+     ↓
+Faster execution
+```
+
+This is an example of **projection pushdown**: Spark pushes the column selection as close to the data source as possible.
+
+### Why Does the Complete Plan Matter?
+
+If every operation were executed immediately, Spark wouldn't know what you were going to do next.
+
+With lazy evaluation, Spark can ask:
+
+> **“What is the final result the user actually needs?”**
+
+Then it can optimize the work required to produce it.
+
+> **Read less → process less → move less data → finish faster.**
+
+This is one of the key reasons **lazy evaluation is so important in Spark**: Spark doesn't just execute your code—it can **optimize the execution plan before doing the work**.
