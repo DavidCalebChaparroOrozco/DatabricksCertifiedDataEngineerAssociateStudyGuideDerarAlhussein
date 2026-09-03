@@ -208,3 +208,300 @@ Higher cost
 ```
 
 > **Key idea:** Narrow transformations usually keep data local, while wide transformations may require expensive data movement and processing across the cluster.
+
+---
+
+## What is a **Shuffle**
+
+A **shuffle** is the process Spark uses to **redistribute data between partitions**.
+
+It occurs when a **wide transformation** requires data from multiple input partitions to be brought together.
+
+### What Triggers a Shuffle?
+
+Common operations that can require a shuffle include:
+
+* **`groupBy()`**: Brings records with the same grouping key together.
+* **`join()`**: Brings matching records from two datasets together.
+* **`distinct()`**: Brings records together to identify and remove duplicates.
+* **`orderBy()`**: Redistributes data so it can be globally sorted.
+
+### Simple Example
+
+```python
+df.groupBy("country").count()
+```
+
+If `Colombia` records are spread across several partitions:
+
+```text
+Partition 1 → Colombia
+Partition 2 → Colombia
+Partition 3 → Colombia
+```
+
+Spark must redistribute those records so they can be processed together:
+
+```text
+Partition 1 ──┐
+Partition 2 ──┼──→ Shuffle → Records grouped by country
+Partition 3 ──┘
+```
+
+> **Key idea:** Wide transformation requires data from multiple partitions → Spark redistributes the data → **shuffle**.
+
+A shuffle is often one of the **most expensive parts of a Spark job** because it can involve network transfer, serialization, disk I/O, and additional processing.
+
+---
+
+## Shuffle in Action
+
+During a **shuffle**, Spark uses the record's **key** to determine which partition should receive it.
+
+For example:
+
+```text
+Colombia → Partition 1
+USA      → Partition 2
+Mexico   → Partition 3
+```
+
+Records are redistributed based on their key:
+
+```text
+Input Partitions          Shuffle          Output Partitions
+
+P1 ── Colombia ───────────────┐
+P2 ── Colombia ───────────────┼──→ P1: All Colombia records
+P3 ── Colombia ───────────────┘
+
+P1 ── USA ────────────────────┐
+P2 ── USA ────────────────────┼──→ P2: All USA records
+P3 ── USA ────────────────────┘
+
+P1 ── Mexico ─────────────────┐
+P2 ── Mexico ──────────────────┼──→ P3: All Mexico records
+P3 ── Mexico ──────────────────┘
+```
+
+After the shuffle, **all records with the same key are placed in the same partition**.
+
+This allows Spark to perform the next operation **locally within each partition**.
+
+For example:
+
+```python
+df.groupBy("country").count()
+```
+
+Once all `Colombia` records are together, Spark can simply count them in that partition.
+
+> **Key idea:** The shuffle redistributes records by key → records with the same key end up in the same partition → the next operation can be performed locally.
+
+---
+
+## What Is a Stage?
+
+A **stage** is a block of work that Spark can execute together **without needing to redistribute data between partitions**.
+
+### Exam Definition
+
+> **A stage groups together all the transformations that can be performed without moving data between partitions.**
+
+Spark can execute a sequence of **narrow transformations** in the same stage because they do not require a shuffle.
+
+### Example
+
+```text
+STAGE 1
+filter()
+   ↓
+select()
+   ↓
+withColumn()
+   ↓
+SHUFFLE
+   ↓
+STAGE 2
+groupBy()
+   ↓
+count()
+```
+
+In **Stage 1**, Spark can execute:
+
+```text
+filter() → select() → withColumn()
+```
+
+These are narrow transformations, so data stays within its partitions.
+
+When `groupBy()` requires a **shuffle**, Spark must redistribute the data. This creates a **boundary between stages**.
+
+After the shuffle, Spark starts **Stage 2**:
+
+```text
+groupBy() → count()
+```
+
+> **Key idea:** Narrow transformations can run together in the same stage. A **shuffle marks the boundary** between one stage and the next.
+
+---
+
+## Spark Cuts the Plan Where There Is a Shuffle
+
+Consider this code:
+
+```python
+df.filter(df["age"] > 18) \
+  .select("name", "age") \
+  .groupBy("age") \
+  .count()
+```
+
+Spark divides the execution plan into stages at the **shuffle boundary**.
+
+```text
+STAGE 1
+filter()
+   ↓
+select()
+   ↓
+SHUFFLE
+   ↓
+STAGE 2
+groupBy()
+   ↓
+count()
+```
+
+### Why?
+
+* **`filter()`** is a narrow transformation → no shuffle.
+* **`select()`** is a narrow transformation → no shuffle.
+* **`groupBy()`** requires data to be redistributed → shuffle.
+* **`count()`** operates after the grouping and can be performed within the resulting partitions.
+
+Therefore:
+
+> **`filter()` + `select()` → Stage 1 → shuffle → `groupBy()` + `count()` → Stage 2**
+
+**Key idea:** Spark can execute consecutive narrow transformations in the same stage. **The shuffle creates the boundary that separates stages.**
+
+---
+
+## A Production Line
+
+Think of a Spark job like a **production line**. Spark chains narrow transformations together and keeps processing as long as it does not need to redistribute data.
+
+```text
+Raw Data
+   ↓
+STAGE 1
+filter()      {narrow}
+   ↓
+select()      {narrow}
+   ↓
+withColumn()  {narrow}
+   ↓
+SHUFFLE
+   ↓
+STAGE 2
+groupBy()     {wide → requires shuffle}
+   ↓
+count()       {local operation}
+   ↓
+Result
+```
+
+### How the Production Line Works
+
+* As long as the transformations are **narrow**, Spark can keep them in the **same stage**.
+* When a transformation requires a **shuffle**, Spark must stop that part of the pipeline and redistribute the data.
+* After the shuffle, Spark continues the remaining work in a **new stage**.
+
+> **Key idea:** Narrow transformations keep the production line moving → a shuffle stops the line and redistributes the data → the next part of the work continues in a new stage.
+
+---
+
+## Four Words You Shouldn't Mix
+
+Each concept answers a **different question**:
+
+### 1. Transformation — **What do I write?**
+
+A **transformation** is an operation you define on a DataFrame, such as:
+
+```python
+filter()
+select()
+withColumn()
+groupBy()
+```
+
+It describes **what you want Spark to do with the data**.
+
+---
+
+### 2. Narrow / Wide — **What does it need?**
+
+**Narrow** and **wide** describe the **dependency between input and output partitions**.
+
+* **Narrow:** An output partition needs data from only one input partition.
+* **Wide:** An output partition needs data from multiple input partitions.
+
+In other words:
+
+> **Does this operation need data from other partitions?**
+
+---
+
+### 3. Shuffle — **What happens physically?**
+
+A **shuffle** is the **physical redistribution of data between partitions**.
+
+It happens when Spark needs to move data so that records can be processed together, typically because of a **wide dependency**.
+
+> **Wide dependency → shuffle is required.**
+
+---
+
+### 4. Stage — **How is the work organized?**
+
+A **stage** is a group of operations that Spark can execute together **without crossing a shuffle boundary**.
+
+When Spark encounters a shuffle, the current stage ends and a **new stage begins** after the shuffle.
+
+```text
+Transformation
+      ↓
+Narrow or Wide?
+      ↓
+If Wide → Shuffle
+      ↓
+Shuffle creates a Stage boundary
+```
+
+### The Complete Picture
+
+```text
+You write a transformation
+        ↓
+Is it narrow or wide?
+        ↓
+Narrow → no shuffle → stays in the same stage
+        ↓
+Wide → requires shuffle
+        ↓
+Shuffle → stage boundary
+        ↓
+New stage
+```
+
+> **Transformation = what you write**
+> 
+> **Narrow/Wide = what the operation needs**
+> 
+> **Shuffle = data movement that occurs because of a wide dependency**
+> 
+> **Stage = how Spark groups the work around shuffle boundaries**
